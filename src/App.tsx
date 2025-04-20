@@ -1,8 +1,10 @@
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from './pages/Login';
 import HomePaciente from './pages/paciente/Home';
 import HomeMedico from './pages/medico/Home';
 import HomeAdmin from './pages/admin/Home';
+import AdminDoctores from './pages/admin/adminDoctores';
+import RegisterDoctor from './pages/admin/RegisterDoctor';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import Unauthorized from './pages/Unauthorized';
@@ -31,31 +33,27 @@ function App() {
                   case 'admin':
                     return <HomeAdmin />;
                   default:
-                    return <Navigate to="/unauthorized" replace />;
+                    return <Unauthorized />;
                 }
               })()}
             </ProtectedRoute>
           }
         />
         <Route path="/unauthorized" element={<Unauthorized />} />
-
-        {/* Rutas protegidas por rol (opcional) */}
-        {/* <Route
-          path="/admin/dashboard"
+        <Route path="/administrar/doctores"
           element={
             <ProtectedRoute allowedRoles={['admin']}>
-              <HomeAdmin />
+              <AdminDoctores />
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/medico/dashboard"
+        <Route path="/administrar/registerDoctor"
           element={
-            <ProtectedRoute allowedRoles={['medico']}>
-              <HomeMedico />
+            <ProtectedRoute allowedRoles={['admin']}>
+              <RegisterDoctor />
             </ProtectedRoute>
           }
-        /> */}
+        />
       </Routes>
     </Router>
   );
