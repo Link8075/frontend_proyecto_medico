@@ -112,6 +112,11 @@ const Register: React.FC = () => {
       valid = false;
     }
 
+    if (!formData.telefono) {
+      newErrors.telefono = 'El teléfono es obligatorio';
+      valid = false;
+    }
+
     if (!formData.acepto_terminos) {
       newErrors.acepto_terminos = 'Debes aceptar los términos y condiciones';
       valid = false;

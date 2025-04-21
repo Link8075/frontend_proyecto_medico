@@ -4,7 +4,9 @@ import HomePaciente from './pages/paciente/Home';
 import HomeMedico from './pages/medico/Home';
 import HomeAdmin from './pages/admin/Home';
 import AdminDoctores from './pages/admin/adminDoctores';
+import AdminPacientes from './pages/admin/adminPacientes';
 import RegisterDoctor from './pages/admin/RegisterDoctor';
+import RegisterPaciente from './pages/admin/RegisterPaciente';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import Unauthorized from './pages/Unauthorized';
@@ -51,6 +53,20 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <RegisterDoctor />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/administrar/pacientes"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminPacientes />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/administrar/registerPaciente"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <RegisterPaciente />
             </ProtectedRoute>
           }
         />

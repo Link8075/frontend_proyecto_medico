@@ -143,53 +143,6 @@ const Register: React.FC = () => {
     handleCloseTermsModal();
   };
 
-  /* 
-  // Código de geocodificación comentado para uso futuro
-  const handleGeocode = async () => {
-    if (!formData.direccion_consultorio) {
-      setErrors({
-        ...errors,
-        direccion_consultorio: 'Ingresa una dirección para buscar coordenadas'
-      });
-      return;
-    }
-
-    setIsGeocoding(true);
-
-    try {
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode(
-        { address: formData.direccion_consultorio },
-        (results, status) => {
-          setIsGeocoding(false);
-
-          if (status === 'OK' && results?.[0]?.geometry?.location) {
-            const location = results[0].geometry.location;
-            setFormData({
-              ...formData,
-              coordenadas_consultorio: {
-                lat: location.lat(),
-                lng: location.lng()
-              }
-            });
-          } else {
-            setErrors({
-              ...errors,
-              direccion_consultorio: 'No se pudo encontrar la ubicación. Verifica la dirección.'
-            });
-          }
-        }
-      );
-    } catch (error) {
-      setIsGeocoding(false);
-      setErrors({
-        ...errors,
-        direccion_consultorio: 'Error al conectar con el servicio de mapas'
-      });
-    }
-  };
-  */
-
   const validate = () => {
     let valid = true;
     const newErrors = {
@@ -238,6 +191,11 @@ const Register: React.FC = () => {
 
     if (!formData.apellidos) {
       newErrors.apellidos = 'Los apellidos son obligatorios';
+      valid = false;
+    }
+
+    if (!formData.telefono) {
+      newErrors.telefono = 'El teléfono es obligatorio';
       valid = false;
     }
 
@@ -309,11 +267,11 @@ const Register: React.FC = () => {
       };
 
       const userResponse = await api.post('users/', userData);
-      // console.log(userResponse.data)
+      console.log(userResponse.data.id)
 
       // Luego registrar la información profesional
       const medicoData = {
-        usuario_id: userResponse.data.usuario_id,
+        usuario_id: userResponse.data.id,
         cedula_profesional: formData.cedula_profesional,
         especialidad: formData.especialidad,
         dias_laborables: formData.dias_laborables.join(','),
@@ -322,13 +280,15 @@ const Register: React.FC = () => {
         coordenadas_consultorio: `${formData.coordenadas_consultorio.lat},${formData.coordenadas_consultorio.lng}`,
         cedula_validada: formData.cedula_validada
       };
+      // console.log(medicoData);
 
-      // await api.post('users/medico', medicoData);
+      const medicoResponse = await api.post('test/user/medico', medicoData);
+      // console.log(medicoResponse.data);
 
       setSuccessMessage('¡Médico registrado con éxito!');
-      // setTimeout(() => {
-      //   navigate('/administrar/doctores');
-      // }, 3000);
+      setTimeout(() => {
+        navigate('/administrar/doctores');
+      }, 3000);
     } catch (err: any) {
       const message = err.response?.data?.message || 'Error al registrar';
       if (err.response?.status === 409) {
@@ -599,38 +559,6 @@ const Register: React.FC = () => {
                   />
                 </Grid>
               </Grid>
-
-              {/* <Box sx={{ mt: 2, mb: 2 }}>
-                <Button
-                  variant="outlined"
-                  onClick={handleGeocode}
-                  disabled={isGeocoding || !formData.direccion_consultorio}
-                  startIcon={isGeocoding ? <CircularProgress size={20} /> : null}
-                >
-                  {isGeocoding ? 'Buscando ubicación...' : 'Obtener coordenadas'}
-                </Button>
-              </Box>
-
-              {formData.coordenadas_consultorio.lat !== 0 && formData.coordenadas_consultorio.lng !== 0 && (
-                <Box sx={{ mt: 2, mb: 2 }}>
-                  <Typography variant="body2">
-                    Coordenadas obtenidas: Lat: {formData.coordenadas_consultorio.lat.toFixed(6)},
-                    Lng: {formData.coordenadas_consultorio.lng.toFixed(6)}
-                  </Typography>
-
-                  {mapLoaded && (
-                    <LoadScript googleMapsApiKey="AIzaSyA7ZIR6z4DjcadOSEEX8Z0pemUVDEY7ThY">
-                      <GoogleMap
-                        mapContainerStyle={{ width: '100%', height: '300px', marginTop: '16px' }}
-                        center={formData.coordenadas_consultorio}
-                        zoom={15}
-                      >
-                        <Marker position={formData.coordenadas_consultorio} />
-                      </GoogleMap>
-                    </LoadScript>
-                  )}
-                </Box>
-              )} */}
 
               {formData.coordenadas_consultorio.lat !== 0 && formData.coordenadas_consultorio.lng !== 0 && (
                 <Box sx={{ mt: 2, mb: 2 }}>

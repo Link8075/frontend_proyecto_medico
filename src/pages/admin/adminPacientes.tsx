@@ -24,9 +24,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import WarningIcon from '@mui/icons-material/Warning';
 import CloseIcon from '@mui/icons-material/Close';
 import Navbar from './Navbar';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+// import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 
-interface Doctor {
+interface Paciente {
   id: number;
   nombre: string;
   apellidos: string;
@@ -37,41 +37,38 @@ interface Doctor {
   // Agrega otros campos según necesites
 }
 
-interface Medico {
+interface Cita {
   id: number;
-  cedula_profesional?: string;
-  especialidad?: string;
-  dias_laborables?: string;
-  horario?: string;
-  direccion_consultorio?: string;
-  coordenadas_consultorio?: {
-    x: number;
-    y: number;
-  };
-  cedula_validada?: boolean;
+  nombreMedico: string;
+  fecha_hora: string;
+  duracion_min: string;
+  estado: string;
+  calificacion?: string;
+  notas_paciente?: string;
+  frecuencia?: string;
 }
 
 const Home: React.FC = () => {
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-  const [doctorToDelete, setDoctorToDelete] = useState<number | null>(null);
+  const [pacienteToDelete, setPacienteToDelete] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [patients, setPatients] = useState<Paciente[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
-  const [medicoInfo, setMedicoInfo] = useState<Medico | null>(null);
+  const [selectedPaciente, setSelectedPaciente] = useState<Paciente | null>(null);
+  const [citasInfo, setCitasInfo] = useState<Cita[]>([]);
   const [openModal, setOpenModal] = useState(false);
 
   useEffect(() => {
-    const fetchDoctors = async () => {
+    const fetchPatients = async () => {
       try {
         const response = await api.get('users/rol', {
-          params: { rol: 'medico' }
+          params: { rol: 'paciente' }
         });
-        // console.log(response.data);
-        const doctorsData = Array.isArray(response.data) ? response.data : [response.data];
-        setDoctors(doctorsData);
+        console.log(response.data);
+        const patientsData = Array.isArray(response.data) ? response.data : [response.data];
+        setPatients(patientsData);
       } catch (err: any) {
         if (err.response) {
           setError(`Error del servidor: ${err.response.data.message || err.response.status}`);
@@ -85,18 +82,17 @@ const Home: React.FC = () => {
       }
     };
 
-    fetchDoctors();
+    fetchPatients();
   }, []);
 
-  const handleDoctorClick = async (doctor: Doctor) => {
+  const handlePacienteClick = async (paciente: Paciente) => {
     // http://localhost:3010/api/v1/users/medico?id=33
     try {
-      // const response = api.get(`users/medico?id=${doctor.id}`);
-      const response = await api.get('users/medico', {
-        params: { id: doctor.id }
-      });
-      setMedicoInfo(response.data);
-      console.log(medicoInfo);
+      // const response = await api.get('users/cita', {
+      //   params: { id: paciente.id }
+      // });
+      // setCitasInfo(response.data);
+      // console.log(citasInfo);
     }
     catch (err: any) {
       if (err.response) {
@@ -108,24 +104,24 @@ const Home: React.FC = () => {
       }
     }
     // console.log(doctor.id);
-    setSelectedDoctor(doctor);
+    setSelectedPaciente(paciente);
     setOpenModal(true);
   };
 
   const handleCloseModal = () => {
     setOpenModal(false);
-    setSelectedDoctor(null);
-    setMedicoInfo(null);
-    window.location.href = '/administrar/doctores';
+    setSelectedPaciente(null);
+    setCitasInfo([]);
+    window.location.href = '/administrar/pacientes';
   };
 
   const handleEliminarClick = (usuario_id: number) => {
-    setDoctorToDelete(usuario_id);
+    setPacienteToDelete(usuario_id);
     setOpenConfirmDialog(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!doctorToDelete) return;
+    if (!pacienteToDelete) return;
 
     const token = localStorage.getItem('token');
     if (!token) {
@@ -135,32 +131,32 @@ const Home: React.FC = () => {
     }
 
     try {
-      await api.delete(`users/delete/${doctorToDelete}`, {
+      await api.delete(`users/delete/${pacienteToDelete}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
 
       // Actualiza la lista de pacientes
-      const updatedDoctors = doctors.filter(p => p.id !== doctorToDelete);
-      setDoctors(updatedDoctors);
+      const updatedPatients = patients.filter(p => p.id !== pacienteToDelete);
+      setPatients(updatedPatients);
 
-      setSuccessMessage('¡Doctor eliminado!');
+      setSuccessMessage('¡Paciente eliminado!');
       setTimeout(() => {
         setOpenConfirmDialog(false);
         setOpenModal(false);
-        setSelectedDoctor(null);
+        setSelectedPaciente(null);
         setSuccessMessage('');
       }, 3000);
 
       // Cierra los modales
       // setOpenConfirmDialog(false);
       // setOpenModal(false);
-      // setSelectedDoctor(null);
+      // setSelectedPaciente(null);
 
     } catch (error) {
       console.error('Error al eliminar el paciente:', error);
-      setSuccessMessage('Error al eliminar al Doctor');
+      setSuccessMessage('Error al eliminar el paciente');
       setTimeout(() => {
         setOpenConfirmDialog(false);
         setSuccessMessage('');
@@ -175,7 +171,7 @@ const Home: React.FC = () => {
       <Box component="main" sx={{ flexGrow: 1, width: '100vw', p: 0, m: 0 }}>
         <Box sx={{ width: '100%', bgcolor: 'background.paper', p: 3, boxSizing: 'border-box' }}>
           <Typography variant="h4" gutterBottom>
-            Administrar doctores
+            Administrar pacientes
           </Typography>
 
           {loading ? (
@@ -189,31 +185,31 @@ const Home: React.FC = () => {
           ) : (
             <>
               <Typography paragraph>
-                Lista de doctores registrados
+                Lista de pacientes registrados
               </Typography>
 
-              <Button variant="contained" color="primary" href="/administrar/registerDoctor">
-                Agregar doctor
+              <Button variant="contained" color="primary" href="/administrar/registerPaciente">
+                Agregar paciente
               </Button>
 
-              {doctors.length > 0 ? (
+              {patients.length > 0 ? (
                 <List>
-                  {doctors.map((doctor) => (
+                  {patients.map((paciente) => (
                     <ListItem
-                      key={doctor.id}
+                      key={paciente.id}
                       button // Hace que el ListItem sea clickeable
-                      onClick={() => handleDoctorClick(doctor)}
+                      onClick={() => handlePacienteClick(paciente)}
                     >
                       <ListItemText
-                        primary={`${doctor.nombre} ${doctor.apellidos}`}
-                        secondary={`Email: ${doctor.email} | Teléfono: ${doctor.telefono}`}
+                        primary={`${paciente.nombre} ${paciente.apellidos}`}
+                        secondary={`Email: ${paciente.email} | Teléfono: ${paciente.telefono}`}
                       />
                     </ListItem>
                   ))}
                 </List>
               ) : (
                 <Typography paragraph>
-                  No se encontraron doctores
+                  No se encontraron pacientes
                 </Typography>
               )}
             </>
@@ -225,15 +221,15 @@ const Home: React.FC = () => {
       <Modal
         open={openModal}
         onClose={handleCloseModal}
-        aria-labelledby="doctor-details-modal"
-        aria-describedby="doctor-details-description"
+        aria-labelledby="paciente-details-modal"
+        aria-describedby="paciente-details-description"
       >
         <Box sx={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: { xs: '90%', sm: '80%', md: '600px' },
+          width: { xs: '90%', sm: '80%', md: '700px' },
           bgcolor: 'background.paper',
           boxShadow: 24,
           borderRadius: 2,
@@ -248,130 +244,141 @@ const Home: React.FC = () => {
                   <CloseIcon />
                 </IconButton>
               }
-              title={`Dr. ${selectedDoctor?.nombre} ${selectedDoctor?.apellidos}`}
-              subheader={`ID: ${selectedDoctor?.id}`}
+              title={`Paciente: ${selectedPaciente?.nombre} ${selectedPaciente?.apellidos}`}
+              subheader={`ID: ${selectedPaciente?.id}`}
             />
             <Divider />
             <CardContent>
-              {selectedDoctor && (
+              {selectedPaciente && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {/* Información básica del doctor */}
+                  {/* Información básica del paciente */}
                   <Typography variant="h6" gutterBottom>
                     Información Básica
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Email:</strong> {selectedDoctor.email}
+                    <strong>Email:</strong> {selectedPaciente.email}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Teléfono:</strong> {selectedDoctor.telefono}
+                    <strong>Teléfono:</strong> {selectedPaciente.telefono}
                   </Typography>
-                  {selectedDoctor.registro && (
+                  {selectedPaciente.registro && (
                     <Typography variant="body1">
-                      <strong>Fecha de registro:</strong> {selectedDoctor.registro}
+                      <strong>Fecha de registro:</strong> {selectedPaciente.registro}
                     </Typography>
                   )}
                   <Typography variant="body1">
-                    <strong>Aceptó términos y condiciones:</strong> {selectedDoctor.acepto_terminos ? 'Sí' : 'No'}
+                    <strong>Aceptó términos y condiciones:</strong> {selectedPaciente.acepto_terminos ? 'Sí' : 'No'}
                   </Typography>
 
-                  {/* Información adicional del médico */}
-                  {medicoInfo && (
-                    <>
-                      <Divider sx={{ my: 2 }} />
-                      <Typography variant="h6" gutterBottom>
-                        Información Profesional
-                      </Typography>
-                      {medicoInfo.cedula_profesional && (
-                        <Typography variant="body1">
-                          <strong>Cédula profesional:</strong> {medicoInfo.cedula_profesional} ({medicoInfo.cedula_validada ? 'Verificada' : 'Sin verificar'})
-                        </Typography>
-                      )}
-                      {medicoInfo.especialidad && (
-                        <Typography variant="body1">
-                          <strong>Especialidad:</strong> {medicoInfo.especialidad}
-                        </Typography>
-                      )}
-                      {medicoInfo.dias_laborables && (
-                        <Typography variant="body1">
-                          <strong>Días laborables:</strong> {medicoInfo.dias_laborables}
-                        </Typography>
-                      )}
-                      {medicoInfo.horario && (
-                        <Typography variant="body1">
-                          <strong>Horario:</strong> {medicoInfo.horario}
-                        </Typography>
-                      )}
-                      {medicoInfo.direccion_consultorio && (
-                        <Typography variant="body1">
-                          <strong>Dirección del consultorio:</strong> {medicoInfo.direccion_consultorio}
-                        </Typography>
-                      )}
-                      {medicoInfo?.coordenadas_consultorio && (
-                        <>
-                          <Typography variant="body1">
-                            <strong>Coordenadas:</strong> Lat: {medicoInfo.coordenadas_consultorio.x}, Long: {medicoInfo.coordenadas_consultorio.y}
+                  {/* Sección de citas */}
+                  <Divider sx={{ my: 2 }} />
+                  <Typography variant="h6" gutterBottom>
+                    Citas del Paciente
+                  </Typography>
+
+                  {citasInfo.length > 0 ? (
+                    <Box>
+                      {citasInfo.map((cita, index) => (
+                        <Box key={cita.id} sx={{
+                          mb: 3,
+                          p: 2,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                          backgroundColor: index % 2 === 0 ? 'action.hover' : 'background.paper'
+                        }}>
+                          <Typography variant="subtitle1">
+                            <strong>Cita #{index + 1}</strong>
                           </Typography>
 
-                          {/* Mostrar mapa con marcador */}
-                          <Typography variant="body1" sx={{ mt: 2 }}>
-                            <strong>Ubicación del Consultorio</strong>
-                          </Typography>
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 1 }}>
+                            <Typography variant="body2">
+                              <strong>Médico:</strong> {cita.nombreMedico}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Fecha y hora:</strong> {new Date(cita.fecha_hora).toLocaleString()}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Duración:</strong> {cita.duracion_min} minutos
+                            </Typography>
+                          </Box>
 
-                          {/* Agregar key única para forzar remontaje */}
-                          <LoadScript
-                            googleMapsApiKey="AIzaSyA7ZIR6z4DjcadOSEEX8Z0pemUVDEY7ThY"
-                            key={`${medicoInfo.id}-${medicoInfo.coordenadas_consultorio.x}-${medicoInfo.coordenadas_consultorio.y}`}
-                          >
-                            <GoogleMap
-                              mapContainerStyle={{ width: '100%', height: '200px' }}
-                              center={{
-                                lat: medicoInfo.coordenadas_consultorio.x,
-                                lng: medicoInfo.coordenadas_consultorio.y
-                              }}
-                              zoom={15}
-                            >
-                              <Marker
-                                position={{
-                                  lat: medicoInfo.coordenadas_consultorio.x,
-                                  lng: medicoInfo.coordenadas_consultorio.y
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 1 }}>
+                            <Typography variant="body2">
+                              <strong>Estado:</strong>
+                              <Box
+                                component="span"
+                                sx={{
+                                  ml: 1,
+                                  color: cita.estado === 'completada' ? 'success.main' :
+                                    cita.estado === 'cancelada' ? 'error.main' :
+                                      'warning.main',
+                                  fontWeight: 'bold'
                                 }}
-                              />
-                            </GoogleMap>
-                          </LoadScript>
-                        </>
-                      )}
-                      {/* <Typography variant="body1">
-                        <strong>Cédula validada:</strong> {medicoInfo.cedula_validada ? 'Sí' : 'No'}
-                      </Typography> */}
-                    </>
-                  )}
-                  {!medicoInfo && (
+                              >
+                                {cita.estado}
+                              </Box>
+                            </Typography>
+
+                            {cita.calificacion && (
+                              <Typography variant="body2">
+                                <strong>Calificación:</strong> {cita.calificacion}/5
+                              </Typography>
+                            )}
+
+                            {cita.frecuencia && (
+                              <Typography variant="body2">
+                                <strong>Frecuencia:</strong> {cita.frecuencia}
+                              </Typography>
+                            )}
+                          </Box>
+
+                          {cita.notas_paciente && (
+                            <Box sx={{ mt: 1 }}>
+                              <Typography variant="body2">
+                                <strong>Notas del paciente:</strong>
+                              </Typography>
+                              <Typography variant="body2" sx={{
+                                fontStyle: 'italic',
+                                p: 1,
+                                backgroundColor: 'background.default',
+                                borderRadius: 1
+                              }}>
+                                {cita.notas_paciente}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  ) : (
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                      No se encontró información profesional adicional para este médico.
+                      No se encontraron citas registradas para este paciente.
                     </Typography>
                   )}
+
                   {/* Botones de acción */}
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 3 }}>
                     <Button
                       variant="contained"
                       color="error"
-                      onClick={() => selectedDoctor && handleEliminarClick(selectedDoctor.id)}
+                      onClick={() => selectedPaciente && handleEliminarClick(selectedPaciente.id)}
                       sx={{
                         backgroundColor: 'red',
                         '&:hover': { backgroundColor: 'darkred' },
                         mr: 2 // margen a la derecha
                       }}
                     >
-                      Eliminar Doctor
+                      Eliminar paciente
                     </Button>
                     <Button
                       variant="contained"
                       sx={{ backgroundColor: 'blue', '&:hover': { backgroundColor: 'darkblue' } }}
                       onClick={() => {
-                        console.log('Modificar doctor', selectedDoctor.id);
+                        console.log('Modificar paciente', selectedPaciente.id);
                       }}
                     >
-                      Modificar Doctor
+                      Modificar paciente
                     </Button>
                   </Box>
                 </Box>
@@ -398,9 +405,9 @@ const Home: React.FC = () => {
           <Typography variant="body1" sx={{ mt: 2 }}>
             ¿Estás seguro que deseas eliminar permanentemente este paciente?
           </Typography>
-          {selectedDoctor && (
+          {selectedPaciente && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Doctor: <strong>{selectedDoctor.nombre} {selectedDoctor.apellidos}</strong>
+              Paciente: <strong>{selectedPaciente.nombre} {selectedPaciente.apellidos}</strong>
             </Typography>
           )}
           <Alert severity="warning" sx={{ mt: 2 }}>
